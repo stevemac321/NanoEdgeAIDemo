@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include "NanoEdgeAI.h"
 #include "stdio.h"
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -38,7 +39,6 @@
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 #define DATA_INPUT_USER 141
-#define UART_BUFFER 564
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -48,8 +48,10 @@ UART_HandleTypeDef huart3;
 /* USER CODE BEGIN PV */
 
 // USART3 receive buffer
- static uint8_t rx_buffer[UART_BUFFER];
-extern float training_data[][141];
+static float EKG_Input[DATA_INPUT_USER];// pass to model
+static uint8_t rx_chunk[4];           // Temporary buffer to hold 4 bytes of one float
+static uint16_t ekg_index = 0;        // Index into EKG_Input
+extern float training_data[][DATA_INPUT_USER];
 extern size_t training_data_len;
 /* USER CODE END PV */
 
@@ -111,7 +113,13 @@ int main(void)
 	  __HAL_UART_DISABLE_IT(&huart3, UART_IT_RXNE);
   } else {
   // Start UART receive in interrupt mode
-	  HAL_UART_Receive_IT(&huart3, rx_buffer, UART_BUFFER);
+	  // Request the next 4 bytes (one float)
+	  HAL_StatusTypeDef hal_ret = HAL_UART_Receive_IT(&huart3, rx_chunk, sizeof(rx_chunk));
+
+	  if(hal_ret != HAL_OK) {
+		  //printf("receiveIT failed %d", hal_ret);
+		  return 0;
+	  }
   }
 
   while (1)
@@ -288,16 +296,30 @@ int _write(int file, char *ptr, int len) {
 }
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    if (huart->Instance == USART3) {
-    	uint8_t similarity = 0;
-    	float* float_data = (float*)rx_buffer;  // reinterpret bytes as float array
-    	enum neai_state status = neai_anomalydetection_detect(float_data, &similarity);
-    	uint8_t report[2] = { (uint8_t)status, similarity };
-    	HAL_UART_Transmit(&huart3, report, sizeof(report), HAL_MAX_DELAY);
+	 if (huart->Instance == USART3)
+	    {
+	        float value;
+	        memcpy(&value, rx_chunk, sizeof(float));   // Safely convert 4 bytes to float
 
-        // Restart the receive interrupt for next byte(s)
-        HAL_UART_Receive_IT(&huart3, rx_buffer, UART_BUFFER);
-    }
+	        EKG_Input[ekg_index++] = value;            // Store into input array
+
+	        if (ekg_index >= DATA_INPUT_USER)
+	        {
+	            // All 141 floats received — call the model
+	            uint8_t similarity = 0;
+	            enum neai_state status = neai_anomalydetection_detect(EKG_Input, &similarity);
+
+	            // Send status and similarity back
+	            uint8_t report[2] = { (uint8_t)status, similarity };
+	            HAL_UART_Transmit(&huart3, report, sizeof(report), HAL_MAX_DELAY);
+
+	            // Reset index for next signal
+	            ekg_index = 0;
+	        }
+
+	        // Request the next 4 bytes (one float)
+	        HAL_UART_Receive_IT(huart, rx_chunk, sizeof(rx_chunk));
+	    }
 }
 enum neai_state train_model()
 {
