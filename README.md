@@ -21,9 +21,7 @@ This project implements a **real-time EKG anomaly detector** using:
 | File                                       | Description                                                        |
 | ------------------------------------------ | ------------------------------------------------------------------ |
 | `Core/Src/main.c`                          | Main firmware loop, model training, UART receive logic             |
-| `training_data.c`                          | Normal training set (extracted from `normal_signals.csv`)          |
-| `normal_signals.csv`                       | Normal EKG signal data used for training                           |
-| `anomaly_signals.csv`                      | Anomalous EKG signal data used for testing                         |
+| `training_data.c`                          | Normal training set (extracted from `normal_signals.csv`)          |                    |
 | `EKG_Simulalator.py`                       | Python script that sends float arrays over UART and prints results |
 | `NanoEdgeAI.h`, `knowledge.h`, `libneai.a` | NanoEdgeAI model files                                             |
 | `.ioc`                                     | STM32CubeMX project configuration                                  |
