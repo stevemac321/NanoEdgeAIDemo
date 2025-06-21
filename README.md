@@ -84,10 +84,45 @@ Similarity: 0    # Anomaly
 
 #### Host:
 
+### 💻 Python Client (EKG_Simulator.py)
+
+This repository includes a minimal Python script (`EKG_Simulator.py`) designed for **sanity-check testing**. It:
+
+- Uses **hardcoded signal buffers** (no file dependency)
+- Sends a 140-float buffer over UART using 4-byte little-endian encoding
+- Receives and prints the `status` and `similarity` bytes returned by the STM32
+
+> **Default COM port:** `COM4` (can be edited in the script)
+
+This lightweight test client verifies end-to-end functionality of the embedded anomaly detection setup. For a file-driven GUI client, see the [NanoEdge_Client (Qt App)](https://github.com/your-username/NanoEdge_Client) project.
+
+For Linux:
+Great—here’s the section tailored to your existing style and structure. You can drop this near the bottom of your `README.md` under the "🧭 COM Port Configuration" heading:
+
+---
+
+### 🧭 COM Port Configuration
+
+This project uses serial communication over a USB virtual COM port. The port name varies by platform:
+
+- **Windows**: Usually `COM4` or another `COMx` device  
+- **Linux**: Typically `/dev/ttyACM0` or `/dev/ttyUSB0`
+
+#### To Identify the Port on Linux:
+```bash
+dmesg | grep tty
+# or
+ls /dev/ttyACM*
+```
+
+Make sure to update the Python client or GUI with the correct port string for your system.  
+Cross-platform port detection may be added in the future.
+
+Requirements:
 * Python 3.x
 * `pyserial`
 
-```bash
+```bash or Powershell
 pip install pyserial
 ```
 
