@@ -38,7 +38,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define DATA_INPUT_USER 141
+#define DATA_INPUT_USER 140
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -294,6 +294,7 @@ int _write(int file, char *ptr, int len) {
     HAL_UART_Transmit(&huart3, (uint8_t*)ptr, len, HAL_MAX_DELAY);
     return len;
 }
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	 if (huart->Instance == USART3)
@@ -321,6 +322,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	        HAL_UART_Receive_IT(huart, rx_chunk, sizeof(rx_chunk));
 	    }
 }
+
 enum neai_state train_model()
 {
     // Initialize NanoEdge AI
@@ -345,6 +347,7 @@ enum neai_state train_model()
                 printf("Training failed at outer iteration %d, record %d with errcode %d\r\n", x, i, status);
                 return status;  // fatal error
             }
+
         }
     }
 
